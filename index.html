@@ -27,19 +27,19 @@ body {
   min-height: 100vh;
   padding: 20px;
   transition: background-color 0.3s, color 0.3s;
+  text-align: center;
 }
 
 body.light {
   --bg-color: #ffffff;
-  --text-color: #00ffae;
-  --glow-color: #00ffae;
-  --progress-bg: #ddffdd;
-  --progress-fill: #00ffae;
+  --text-color: #0077ff;
+  --glow-color: #0077ff; /* changed glow to blue */
+  --progress-bg: #ddeeff;
+  --progress-fill: #0077ff;
 }
 
 h1 {
-  font-size: 6vw;
-  max-font-size: 48px;
+  font-size: clamp(1.8rem, 6vw, 3rem);
   white-space: nowrap;
   overflow: hidden;
   border-right: 0.15em solid var(--text-color);
@@ -49,7 +49,6 @@ h1 {
   user-select: none;
   margin-left: auto;
   margin-right: auto;
-  text-align: center;
 }
 
 @keyframes typing {
@@ -60,30 +59,32 @@ h1 {
 }
 
 #timer {
-  font-size: 10vw;
-  max-font-size: 80px;
+  font-size: clamp(3rem, 10vw, 5rem);
   padding: 20px 30px;
   border-radius: 14px;
   margin-top: 20px;
   color: var(--text-color);
-  text-shadow: none;
+  text-shadow:
+    0 0 8px var(--glow-color),
+    0 0 20px var(--glow-color);
   display: inline-block;
   user-select: none;
   line-height: 1.2;
   word-break: break-word;
   font-weight: 700;
-  text-align: center;
+  max-width: 95vw;
+  box-sizing: border-box;
 }
 
 #percent {
-  font-size: 4vw;
-  max-font-size: 24px;
+  font-size: clamp(1rem, 4vw, 1.5rem);
   margin-top: 10px;
   font-weight: bold;
   color: var(--progress-fill);
-  text-shadow: 0 0 1px var(--progress-fill);
+  text-shadow:
+    0 0 3px var(--progress-fill),
+    0 0 8px var(--progress-fill);
   user-select: none;
-  text-align: center;
 }
 
 #progress-container {
@@ -102,46 +103,46 @@ h1 {
 #progress-bar {
   height: 100%;
   width: 0%;
-  background: linear-gradient(90deg, #00ffae, #00cc88, #00aa66);
+  background: linear-gradient(90deg, var(--progress-fill), #005fcc, #0044aa);
   animation: progressGlow 4s linear infinite;
   border-radius: 12px;
   transition: width 0.1s ease-out;
   box-shadow:
-    0 0 10px #00ffae,
-    0 0 20px #00cc88,
-    0 0 30px #00aa66;
+    0 0 10px var(--progress-fill),
+    0 0 20px #005fcc,
+    0 0 30px #0044aa;
 }
 
 @keyframes progressGlow {
-  0%, 100% { filter: drop-shadow(0 0 5px #00ffae); }
-  50% { filter: drop-shadow(0 0 10px #00cc88); }
+  0%, 100% { filter: drop-shadow(0 0 5px var(--progress-fill)); }
+  50% { filter: drop-shadow(0 0 10px #005fcc); }
 }
 
 #toggle-btn {
-  margin-top: 30px;
-  padding: 10px 20px;
+  margin-top: 20px;
+  padding: 6px 14px;
   font-family: 'Space Mono', monospace;
   font-weight: 700;
-  font-size: 1.1rem;
+  font-size: 0.9rem;
   background-color: var(--progress-fill);
   border: none;
-  border-radius: 10px;
+  border-radius: 8px;
   color: var(--bg-color);
   cursor: pointer;
   user-select: none;
-  box-shadow: 0 0 15px var(--progress-fill);
+  box-shadow: 0 0 10px var(--progress-fill);
   transition: background-color 0.3s, color 0.3s;
 }
 
 #toggle-btn:hover {
-  background-color: #00cc88;
+  background-color: #005fcc;
 }
 
 /* Responsive */
 @media (max-width: 600px) {
-  h1 { font-size: 10vw; }
-  #timer { font-size: 15vw; }
-  #percent { font-size: 5vw; }
+  h1 { font-size: 8vw; }
+  #timer { font-size: 14vw; }
+  #percent { font-size: 4vw; }
   #progress-container { height: 25px; }
 }
 </style>
@@ -176,7 +177,6 @@ function isWeekend(date) {
   return day === 0 || day === 6;
 }
 
-// Helper: get today's school start/end Date objects
 function getTodaySchoolTimes(date) {
   const start = new Date(date);
   start.setHours(schoolStart.hour, schoolStart.minute, 0, 0);
@@ -189,7 +189,6 @@ function calculateTimeLeft() {
   const now = new Date();
   if (now >= schoolEndDate) return 0;
 
-  // If weekend, find next Monday 7:40am and start counting from there
   if (isWeekend(now)) {
     let daysToMonday = (8 - now.getDay()) % 7;
     if (daysToMonday === 0) daysToMonday = 1;
@@ -199,11 +198,9 @@ function calculateTimeLeft() {
     return calculateTimeLeftFromDate(nextMonday);
   }
 
-  // Otherwise, calculate from now through schoolEndDate summing school hours only
   return calculateTimeLeftFromDate(now);
 }
 
-// Calculate sum of school hours left starting from a specific datetime
 function calculateTimeLeftFromDate(startDate) {
   let totalMs = 0;
   const endDate = schoolEndDate;
@@ -215,16 +212,12 @@ function calculateTimeLeftFromDate(startDate) {
       const { start: schoolDayStart, end: schoolDayEnd } = getTodaySchoolTimes(cursor);
 
       if (cursor < schoolDayStart) {
-        // Before school hours: full school day
         totalMs += schoolDayEnd - schoolDayStart;
       } else if (cursor >= schoolDayEnd) {
-        // After school hours: zero for this day
       } else {
-        // During school hours: count remaining time today
         totalMs += schoolDayEnd - cursor;
       }
     }
-    // Move to next day 7:40am
     cursor.setDate(cursor.getDate() + 1);
     cursor.setHours(schoolStart.hour, schoolStart.minute, 0, 0);
   }
@@ -323,3 +316,4 @@ setInterval(updateTimer, 50);
 </script>
 </body>
 </html>
+
