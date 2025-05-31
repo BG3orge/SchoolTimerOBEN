@@ -8,22 +8,22 @@
       font-family: 'Courier New', Courier, monospace;
       background-color: #f0f8ff;
       text-align: center;
-      padding-top: 100px;
+      padding-top: 500px;
     }
 
     h1 {
-      font-size: 2.5em;
+      font-size: 4.5 em;
     }
 
     #timer {
-      font-size: 2em;
+      font-size: 6 em;
       margin-top: 20px;
       color: #222;
     }
   </style>
 </head>
 <body>
-  <h1>⏳ Time Left in School</h1>
+  <h1>⏳ Time Left Until Classes End</h1>
   <div id="timer"></div>
 
   <script>
@@ -85,7 +85,7 @@
       const now = new Date();
       const remaining = getRemainingSchoolMilliseconds(now);
       document.getElementById("timer").textContent =
-        remaining > 0 ? formatTime(remaining) : "🎉 School's out!";
+        remaining > 0 ? formatTime(remaining) : "🎉 IT'S OVER!!!";
 
       requestAnimationFrame(updateTimer);
     }
