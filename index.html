@@ -1,96 +1,118 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>School Countdown Timer</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>School Timer</title>
   <link href="https://fonts.googleapis.com/css2?family=Space+Mono&display=swap" rel="stylesheet">
   <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
     body {
+      background-color: #0f1117;
+      color: #00ffae;
       font-family: 'Space Mono', monospace;
-      background-color: #f0f8ff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
       text-align: center;
-      padding-top: 500px;
     }
 
     h1 {
-      font-size: 8 em;
+      font-size: 12rem;
+      margin-bottom: 20px;
+      letter-spacing: 4.8px;
     }
 
     #timer {
-      font-size: 10 em;
-      margin-top: 20px;
-      color: #222;
+      font-size: 10rem;
+      background-color: #1a1d29;
+      padding: 20px 40px;
+      border-radius: 10px;
+      box-shadow: 0 0 20px #00ffae50;
     }
   </style>
 </head>
 <body>
-  <h1>⏳ Time Left Until Classes End</h1>
-  <div id="timer"></div>
+  <h1>Time Left Untill Classes End</h1>
+    <div id="timer"></div>
 
   <script>
-    const endDate = new Date("2025-06-16T14:16:00");
-    const schoolStartMinutes = 7 * 60 + 40;
-    const schoolEndMinutes = 14 * 60 + 16;
-    const schoolDayMilliseconds = (schoolEndMinutes - schoolStartMinutes) * 60 * 1000;
+    // Config
+    const schoolStart = { hour: 7, minute: 40 };
+    const schoolEnd = { hour: 14, minute: 16 };
+    const schoolEndDate = new Date("2025-06-16T14:16:00");
 
-    function isWeekend(date) {
+    function isSchoolTime(date) {
       const day = date.getDay();
-      return day === 0 || day === 6;
+      if (day === 0 || day === 6) return false;
+
+      const currentTime = date.getHours() * 60 + date.getMinutes();
+      const startTime = schoolStart.hour * 60 + schoolStart.minute;
+      const endTime = schoolEnd.hour * 60 + schoolEnd.minute;
+      return currentTime >= startTime && currentTime < endTime;
     }
 
-    function getRemainingSchoolMilliseconds(now) {
-      if (now >= endDate) return 0;
+    function calculateTimeLeft() {
+      const now = new Date();
+      let total = 0;
 
-      let totalMs = 0;
-      let date = new Date(now);
+      for (
+        let d = new Date(now);
+        d <= schoolEndDate;
+        d.setDate(d.getDate() + 1)
+      ) {
+        const day = d.getDay();
+        if (day === 0 || day === 6) continue;
 
-      if (!isWeekend(now)) {
-        const currentMs = now.getHours() * 3600000 + now.getMinutes() * 60000 + now.getSeconds() * 1000 + now.getMilliseconds();
-        const schoolStartMs = schoolStartMinutes * 60 * 1000;
-        const schoolEndMs = schoolEndMinutes * 60 * 1000;
-
-        if (currentMs < schoolStartMs) {
-          totalMs += schoolDayMilliseconds;
-        } else if (currentMs >= schoolEndMs) {
-          totalMs += 0;
-        } else {
-          totalMs += schoolEndMs - currentMs;
+        if (
+          d.toDateString() === now.toDateString() &&
+          isSchoolTime(now)
+        ) {
+          const endToday = new Date(
+            now.getFullYear(),
+            now.getMonth(),
+            now.getDate(),
+            schoolEnd.hour,
+            schoolEnd.minute
+          );
+          total += endToday - now;
+        } else if (
+          d.toDateString() !== now.toDateString() &&
+          d <= schoolEndDate
+        ) {
+          total += (schoolEnd.hour - schoolStart.hour) * 3600000 +
+                   (schoolEnd.minute - schoolStart.minute) * 60000;
         }
       }
-
-      date.setDate(date.getDate() + 1);
-      date.setHours(0, 0, 0, 0);
-
-      while (date < endDate) {
-        if (!isWeekend(date)) {
-          totalMs += schoolDayMilliseconds;
-        }
-        date.setDate(date.getDate() + 1);
-      }
-
-      return totalMs;
-    }
-
-    function formatTime(ms) {
-      const hours = Math.floor(ms / 3600000);
-      ms %= 3600000;
-      const minutes = Math.floor(ms / 60000);
-      ms %= 60000;
-      const seconds = Math.floor(ms / 1000);
-      const milliseconds = ms % 1000;
-
-      return `${String(hours).padStart(2, '0')}h : ${String(minutes).padStart(2, '0')}m : ${String(seconds).padStart(2, '0')}s : ${String(milliseconds).padStart(3, '0')}ms`;
+      return total;
     }
 
     function updateTimer() {
-      const now = new Date();
-      const remaining = getRemainingSchoolMilliseconds(now);
-      document.getElementById("timer").textContent =
-        remaining > 0 ? formatTime(remaining) : "🎉 IT'S OVER!!!";
+      const timeLeft = calculateTimeLeft();
 
-      requestAnimationFrame(updateTimer);
+      if (timeLeft <= 0) {
+        document.getElementById("timer").textContent = "🎉 We're Done!!!";
+        return;
+      }
+
+      const hrs = Math.floor(timeLeft / 3600000);
+      const mins = Math.floor((timeLeft % 3600000) / 60000);
+      const secs = Math.floor((timeLeft % 60000) / 1000);
+      const ms = Math.floor((timeLeft % 1000) / 10);
+
+      document.getElementById("timer").textContent =
+        `${hrs}h ${mins}m ${secs}s ${ms.toString().padStart(2, '0')}ms`;
     }
 
+    setInterval(updateTimer, 50);
     updateTimer();
   </script>
 </body>
