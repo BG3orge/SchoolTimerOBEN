@@ -2,7 +2,7 @@
 <html lang="en" >
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
   <title>School Timer</title>
   <link href="https://fonts.googleapis.com/css2?family=Space+Mono&display=swap" rel="stylesheet" />
   <style>
@@ -42,21 +42,25 @@
       transition: background-color 0.5s, color 0.5s;
       opacity: 0;
       animation: fadeInPage 2s forwards;
+      padding: 0 10px 20px 10px;
     }
 
     h1 {
-      font-size: 3rem;
+      font-size: 6vw;
+      max-font-size: 48px;
       white-space: nowrap;
       overflow: hidden;
       border-right: 0.15em solid var(--text-color);
       width: 0;
       animation: typing 2s steps(30, end) forwards, blink 0.7s step-end infinite;
       margin-bottom: 0.5em;
+      user-select: none;
     }
 
     #timer {
-      font-size: 3rem;
-      padding: 30px 60px;
+      font-size: 10vw;
+      max-font-size: 80px;
+      padding: 20px 30px;
       border-radius: 14px;
       margin-top: 20px;
       animation: glow 5s infinite;
@@ -67,10 +71,13 @@
         0 0 30px var(--glow-color);
       display: inline-block;
       user-select: none;
+      line-height: 1.2;
+      word-break: break-word;
     }
 
     #percent {
-      font-size: 1.5rem;
+      font-size: 4vw;
+      max-font-size: 24px;
       margin-top: 10px;
       font-weight: bold;
       color: var(--glow-color);
@@ -81,7 +88,7 @@
     }
 
     #progress-container {
-      width: 70vw;
+      width: 90vw;
       max-width: 600px;
       height: 25px;
       background-color: var(--progress-bg);
@@ -105,20 +112,23 @@
     }
 
     .toggle {
-      position: absolute;
-      top: 20px;
-      right: 20px;
+      position: fixed;
+      top: 15px;
+      right: 15px;
       background: none;
       border: 2px solid var(--text-color);
       color: var(--text-color);
-      padding: 10px 20px;
-      font-size: 1rem;
+      padding: 8px 16px;
+      font-size: 3.5vw;
+      max-font-size: 18px;
       font-family: 'Space Mono', monospace;
       cursor: pointer;
       border-radius: 8px;
       transition: 0.3s;
       user-select: none;
       z-index: 10;
+      min-width: 60px;
+      text-align: center;
     }
 
     .toggle:hover {
@@ -153,6 +163,25 @@
       50%  { filter: drop-shadow(0 0 5px #00bfff); }
       75%  { filter: drop-shadow(0 0 5px #ffff00); }
       100% { filter: drop-shadow(0 0 5px #00ffae); }
+    }
+
+    /* Responsive font size fallback for very small screens */
+    @media (max-width: 400px) {
+      h1 {
+        font-size: 24px !important;
+      }
+      #timer {
+        font-size: 32px !important;
+        padding: 15px 20px;
+      }
+      #percent {
+        font-size: 14px !important;
+      }
+      .toggle {
+        font-size: 14px !important;
+        padding: 6px 12px;
+        min-width: 50px;
+      }
     }
   </style>
 </head>
