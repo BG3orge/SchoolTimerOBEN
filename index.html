@@ -1,12 +1,27 @@
-
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" >
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>School Timer</title>
-  <link href="https://fonts.googleapis.com/css2?family=Space+Mono&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono&display=swap" rel="stylesheet" />
   <style>
+    :root {
+      --bg-color: #0f1117;
+      --text-color: #00ffae;
+      --glow-color: #00ffae;
+      --progress-bg: #002211;
+      --progress-fill: #00ffae;
+    }
+
+    body.light {
+      --bg-color: #ffffff;
+      --text-color: #111111;
+      --glow-color: #ff00cc;
+      --progress-bg: #ffeeff;
+      --progress-fill: #ff00cc;
+    }
+
     * {
       margin: 0;
       padding: 0;
@@ -14,104 +29,277 @@
     }
 
     body {
-      background-color: #0f1117;
-      color: #00ffae;
+      background-color: var(--bg-color);
+      color: var(--text-color);
       font-family: 'Space Mono', monospace;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       height: 100vh;
+      overflow: hidden;
       text-align: center;
+      transition: background-color 0.5s, color 0.5s;
+      opacity: 0;
+      animation: fadeInPage 2s forwards;
     }
 
     h1 {
-      font-size: 12rem;
-      margin-bottom: 20px;
-      letter-spacing: 4.8px;
+      font-size: 3rem;
+      white-space: nowrap;
+      overflow: hidden;
+      border-right: 0.15em solid var(--text-color);
+      width: 0;
+      animation: typing 2s steps(30, end) forwards, blink 0.7s step-end infinite;
+      margin-bottom: 0.5em;
     }
 
     #timer {
-      font-size: 10rem;
-      background-color: #1a1d29;
-      padding: 20px 40px;
-      border-radius: 10px;
-      box-shadow: 0 0 20px #00ffae50;
+      font-size: 3rem;
+      padding: 30px 60px;
+      border-radius: 14px;
+      margin-top: 20px;
+      animation: glow 5s infinite;
+      color: var(--glow-color);
+      text-shadow:
+        0 0 10px var(--glow-color),
+        0 0 20px var(--glow-color),
+        0 0 30px var(--glow-color);
+      display: inline-block;
+      user-select: none;
+    }
+
+    #percent {
+      font-size: 1.5rem;
+      margin-top: 10px;
+      font-weight: bold;
+      color: var(--glow-color);
+      text-shadow:
+        0 0 5px var(--glow-color),
+        0 0 10px var(--glow-color);
+      user-select: none;
+    }
+
+    #progress-container {
+      width: 70vw;
+      max-width: 600px;
+      height: 25px;
+      background-color: var(--progress-bg);
+      border-radius: 12px;
+      overflow: hidden;
+      margin: 30px 0 0 0;
+      box-shadow: 0 0 15px var(--progress-fill);
+    }
+
+    #progress-bar {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #00ffae, #ff00cc, #00bfff, #ffff00, #00ffae);
+      animation: progressGlow 4s linear infinite;
+      border-radius: 12px;
+      transition: width 0.1s ease-out;
+      box-shadow:
+        0 0 10px #00ffae,
+        0 0 20px #ff00cc,
+        0 0 30px #00bfff;
+    }
+
+    .toggle {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: none;
+      border: 2px solid var(--text-color);
+      color: var(--text-color);
+      padding: 10px 20px;
+      font-size: 1rem;
+      font-family: 'Space Mono', monospace;
+      cursor: pointer;
+      border-radius: 8px;
+      transition: 0.3s;
+      user-select: none;
+      z-index: 10;
+    }
+
+    .toggle:hover {
+      background-color: var(--text-color);
+      color: var(--bg-color);
+    }
+
+    @keyframes typing {
+      from { width: 0 }
+      to { width: 100% }
+    }
+
+    @keyframes blink {
+      50% { border-color: transparent }
+    }
+
+    @keyframes fadeInPage {
+      to { opacity: 1; }
+    }
+
+    @keyframes glow {
+      0%   { text-shadow: 0 0 10px #00ffae, 0 0 20px #00ffae; }
+      25%  { text-shadow: 0 0 10px #ff00cc, 0 0 20px #ff00cc; }
+      50%  { text-shadow: 0 0 10px #00bfff, 0 0 20px #00bfff; }
+      75%  { text-shadow: 0 0 10px #ffff00, 0 0 20px #ffff00; }
+      100% { text-shadow: 0 0 10px #00ffae, 0 0 20px #00ffae; }
+    }
+
+    @keyframes progressGlow {
+      0%   { filter: drop-shadow(0 0 5px #00ffae); }
+      25%  { filter: drop-shadow(0 0 5px #ff00cc); }
+      50%  { filter: drop-shadow(0 0 5px #00bfff); }
+      75%  { filter: drop-shadow(0 0 5px #ffff00); }
+      100% { filter: drop-shadow(0 0 5px #00ffae); }
     }
   </style>
 </head>
 <body>
-  <h1>Time Left Untill Classes End</h1>
-    <div id="timer"></div>
+  <button class="toggle" onclick="toggleTheme()">Toggle Mode</button>
+
+  <h1 id="headline">⏳ Time Left in School</h1>
+  <div id="timer"></div>
+  <div id="percent"></div>
+  <div id="progress-container">
+    <div id="progress-bar"></div>
+  </div>
+
+  <audio id="schoolBell">
+    <source src="https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg" type="audio/ogg" />
+    Your browser does not support the audio element.
+  </audio>
+
+  <audio id="startupSound" preload="auto">
+    <source src="https://actions.google.com/sounds/v1/cartoon/slide_whistle_to_drum_hit.ogg" type="audio/ogg" />
+  </audio>
 
   <script>
-    // Config
     const schoolStart = { hour: 7, minute: 40 };
     const schoolEnd = { hour: 14, minute: 16 };
     const schoolEndDate = new Date("2025-06-16T14:16:00");
+    const startupSound = document.getElementById("startupSound");
+    const bellSound = document.getElementById("schoolBell");
+    const timerEl = document.getElementById("timer");
+    const percentEl = document.getElementById("percent");
+    const progressBar = document.getElementById("progress-bar");
+    let bellRung = false;
+
+    // Play startup sound once page loads
+    window.addEventListener('load', () => {
+      startupSound.play().catch(() => {});
+    });
 
     function isSchoolTime(date) {
       const day = date.getDay();
       if (day === 0 || day === 6) return false;
-
       const currentTime = date.getHours() * 60 + date.getMinutes();
       const startTime = schoolStart.hour * 60 + schoolStart.minute;
       const endTime = schoolEnd.hour * 60 + schoolEnd.minute;
       return currentTime >= startTime && currentTime < endTime;
     }
 
+    function getSchoolDayLengthMs() {
+      return (schoolEnd.hour - schoolStart.hour) * 3600000 + (schoolEnd.minute - schoolStart.minute) * 60000;
+    }
+
     function calculateTimeLeft() {
       const now = new Date();
       let total = 0;
 
-      for (
-        let d = new Date(now);
-        d <= schoolEndDate;
-        d.setDate(d.getDate() + 1)
-      ) {
+      for (let d = new Date(now); d <= schoolEndDate; d.setDate(d.getDate() + 1)) {
         const day = d.getDay();
         if (day === 0 || day === 6) continue;
 
-        if (
-          d.toDateString() === now.toDateString() &&
-          isSchoolTime(now)
-        ) {
-          const endToday = new Date(
-            now.getFullYear(),
-            now.getMonth(),
-            now.getDate(),
-            schoolEnd.hour,
-            schoolEnd.minute
-          );
+        if (d.toDateString() === now.toDateString() && isSchoolTime(now)) {
+          const endToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), schoolEnd.hour, schoolEnd.minute);
           total += endToday - now;
-        } else if (
-          d.toDateString() !== now.toDateString() &&
-          d <= schoolEndDate
-        ) {
-          total += (schoolEnd.hour - schoolStart.hour) * 3600000 +
-                   (schoolEnd.minute - schoolStart.minute) * 60000;
+        } else if (d.toDateString() !== now.toDateString() && d <= schoolEndDate) {
+          total += getSchoolDayLengthMs();
         }
       }
       return total;
     }
 
-    function updateTimer() {
-      const timeLeft = calculateTimeLeft();
+    // Calculate total school time left from now till June 16, including today
+    function calculateTotalSchoolTimeLeft() {
+      return calculateTimeLeft();
+    }
 
-      if (timeLeft <= 0) {
-        document.getElementById("timer").textContent = "🎉 We're Done!!!";
+    // Calculate today's school time remaining (if in school hours), else 0
+    function calculateTodaySchoolTimeLeft() {
+      const now = new Date();
+      if (!isSchoolTime(now)) return 0;
+      const endToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), schoolEnd.hour, schoolEnd.minute);
+      return endToday - now;
+    }
+
+    // Calculate total school time today
+    function totalTodaySchoolTime() {
+      return getSchoolDayLengthMs();
+    }
+
+    // Calculate progress % of today's school time passed (0-100)
+    function calculateTodayProgressPercent() {
+      const now = new Date();
+      if (now.getDay() === 0 || now.getDay() === 6) return 0;
+      const startToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), schoolStart.hour, schoolStart.minute);
+      const endToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), schoolEnd.hour, schoolEnd.minute);
+      if (now < startToday) return 0;
+      if (now > endToday) return 100;
+      return ((now - startToday) / (endToday - startToday)) * 100;
+    }
+
+    function updateTimer() {
+      const timeLeftMs = calculateTimeLeft();
+      if (timeLeftMs <= 0) {
+        if (!bellRung) {
+          bellSound.play().catch(() => {});
+          bellRung = true;
+        }
+        timerEl.textContent = "🎉 School's Out!";
+        percentEl.textContent = "";
+        progressBar.style.width = "100%";
         return;
       }
 
-      const hrs = Math.floor(timeLeft / 3600000);
-      const mins = Math.floor((timeLeft % 3600000) / 60000);
-      const secs = Math.floor((timeLeft % 60000) / 1000);
-      const ms = Math.floor((timeLeft % 1000) / 10);
+      const hrs = Math.floor(timeLeftMs / 3600000);
+      const mins = Math.floor((timeLeftMs % 3600000) / 60000);
+      const secs = Math.floor((timeLeftMs % 60000) / 1000);
+      const ms = Math.floor((timeLeftMs % 1000) / 10);
 
-      document.getElementById("timer").textContent =
-        `${hrs}h ${mins}m ${secs}s ${ms.toString().padStart(2, '0')}ms`;
+      timerEl.textContent = `${hrs}h ${mins}m ${secs}s ${ms.toString().padStart(2,'0')}ms`;
+
+      // Percentage of total school time left until June 16
+      const totalTimeLeft = calculateTotalSchoolTimeLeft();
+      const totalSchoolMs = totalTimeLeft + (totalTodaySchoolTime() * ((calculateTodayProgressPercent() || 0) / 100));
+      const percentLeft = (totalTimeLeft / totalSchoolMs) * 100;
+
+      percentEl.textContent = `📊 Total Time Left: ${percentLeft.toFixed(2)}%`;
+
+      // Update progress bar for today's school progress (time passed in school hours)
+      const todayProgress = calculateTodayProgressPercent();
+      progressBar.style.width = `${todayProgress}%`;
+
+      // Play bell at school end time (2:16pm)
+      const now = new Date();
+      if (
+        now.getHours() === schoolEnd.hour &&
+        now.getMinutes() === schoolEnd.minute &&
+        now.getSeconds() === 0 &&
+        !bellRung
+      ) {
+        bellSound.play().catch(() => {});
+        bellRung = true;
+      }
     }
 
+    function toggleTheme() {
+      document.body.classList.toggle("light");
+    }
+
+    // Update timer 20 times a second for smooth ms display
     setInterval(updateTimer, 50);
     updateTimer();
   </script>
