@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>School Countdown Timer</title>
+  <style>
+    body {
+      font-family: 'Courier New', Courier, monospace;
+      background-color: #f0f8ff;
+      text-align: center;
+      padding-top: 100px;
+    }
+
+    h1 {
+      font-size: 2.5em;
+    }
+
+    #timer {
+      font-size: 2em;
+      margin-top: 20px;
+      color: #222;
+    }
+  </style>
+</head>
+<body>
+  <h1>⏳ Time Left in School</h1>
+  <div id="timer"></div>
+
+  <script>
+    const endDate = new Date("2025-06-16T14:16:00");
+    const schoolStartMinutes = 7 * 60 + 40;
+    const schoolEndMinutes = 14 * 60 + 16;
+    const schoolDayMilliseconds = (schoolEndMinutes - schoolStartMinutes) * 60 * 1000;
+
+    function isWeekend(date) {
+      const day = date.getDay();
+      return day === 0 || day === 6;
+    }
+
+    function getRemainingSchoolMilliseconds(now) {
+      if (now >= endDate) return 0;
+
+      let totalMs = 0;
+      let date = new Date(now);
+
+      if (!isWeekend(now)) {
+        const currentMs = now.getHours() * 3600000 + now.getMinutes() * 60000 + now.getSeconds() * 1000 + now.getMilliseconds();
+        const schoolStartMs = schoolStartMinutes * 60 * 1000;
+        const schoolEndMs = schoolEndMinutes * 60 * 1000;
+
+        if (currentMs < schoolStartMs) {
+          totalMs += schoolDayMilliseconds;
+        } else if (currentMs >= schoolEndMs) {
+          totalMs += 0;
+        } else {
+          totalMs += schoolEndMs - currentMs;
+        }
+      }
+
+      date.setDate(date.getDate() + 1);
+      date.setHours(0, 0, 0, 0);
+
+      while (date < endDate) {
+        if (!isWeekend(date)) {
+          totalMs += schoolDayMilliseconds;
+        }
+        date.setDate(date.getDate() + 1);
+      }
+
+      return totalMs;
+    }
+
+    function formatTime(ms) {
+      const hours = Math.floor(ms / 3600000);
+      ms %= 3600000;
+      const minutes = Math.floor(ms / 60000);
+      ms %= 60000;
+      const seconds = Math.floor(ms / 1000);
+      const milliseconds = ms % 1000;
+
+      return `${String(hours).padStart(2, '0')}h : ${String(minutes).padStart(2, '0')}m : ${String(seconds).padStart(2, '0')}s : ${String(milliseconds).padStart(3, '0')}ms`;
+    }
+
+    function updateTimer() {
+      const now = new Date();
+      const remaining = getRemainingSchoolMilliseconds(now);
+      document.getElementById("timer").textContent =
+        remaining > 0 ? formatTime(remaining) : "🎉 School's out!";
+
+      requestAnimationFrame(updateTimer);
+    }
+
+    updateTimer();
+  </script>
+</body>
+</html>
