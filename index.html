@@ -17,7 +17,9 @@
 
 body {
   margin: 0;
-  background-color: var(--bg-color);
+  background: linear-gradient(-45deg, #0f1117, #1a1f2b, #0f1117);
+  background-size: 400% 400%;
+  animation: gradientBG 20s ease infinite;
   color: var(--text-color);
   font-family: 'Space Mono', monospace;
   display: flex;
@@ -27,6 +29,12 @@ body {
   height: 100vh;
   overflow: hidden;
   text-align: center;
+}
+
+@keyframes gradientBG {
+  0% {background-position: 0% 50%;}
+  50% {background-position: 100% 50%;}
+  100% {background-position: 0% 50%;}
 }
 
 h1 {
@@ -39,7 +47,7 @@ h1 {
   border: 2px solid var(--progress-fill);
   border-radius: 12px;
   padding: 20px;
-  box-shadow: 0 0 6px rgba(0, 255, 174, 0.1);
+  box-shadow: 0 0 4px rgba(0, 255, 174, 0.2);
   max-width: 90vw;
 }
 
@@ -84,7 +92,7 @@ h1 {
 <h1>Time Left Until Classes End:</h1>
 <div id="timer-box">
   <div id="days"></div>
-  <div id="timer">--d --h --m --s --ms</div>
+  <div id="timer">--h --m --s --ms</div>
 </div>
 <div id="percent"></div>
 <div id="progress-container">
@@ -100,6 +108,37 @@ const schoolStart = { hour: 7, minute: 40 };
 const schoolEnd = { hour: 14, minute: 16 };
 const schoolEndDate = new Date("2025-06-16T14:16:00");
 const schoolStartDate = new Date("2024-09-01T07:40:00");
+
+const holidays = [
+  ["2024-09-02"], ["2024-10-03"], ["2024-10-04"], ["2024-10-14"],
+  ["2024-11-05"], ["2024-11-11"], ["2024-11-28"], ["2024-11-29"],
+  ["2024-12-23","2025-01-03"], ["2025-01-20"], ["2025-01-29"],
+  ["2025-02-17","2025-02-21"], ["2025-04-10","2025-04-17"],
+  ["2025-05-23"], ["2025-05-26"], ["2025-06-19"]
+];
+
+const milestones = [
+  [60 * 24 * 60 * 60 * 1000, "📅 2 months left!"],
+  [30 * 24 * 60 * 60 * 1000, "📅 1 month left!"],
+  [21 * 24 * 60 * 60 * 1000, "📅 3 weeks left!"],
+  [14 * 24 * 60 * 60 * 1000, "📅 2 weeks left!"],
+  [7 * 24 * 60 * 60 * 1000, "📅 1 week left!"],
+  [2 * 24 * 60 * 60 * 1000, "📅 2 days left!"],
+  [1 * 24 * 60 * 60 * 1000, "📅 1 day left!"],
+  [60 * 60 * 1000, "⏰ 1 hour left!"],
+  [10 * 1000, "🔥 10 seconds left!"],
+  [0, "🎉 School's out!"]
+];
+
+let notified = {};
+
+function isHoliday(date) {
+  const dayStr = date.toISOString().split("T")[0];
+  return holidays.some(([start, end]) => {
+    if (!end) return start === dayStr;
+    return dayStr >= start && dayStr <= end;
+  });
+}
 
 function isWeekend(date) {
   const day = date.getDay();
@@ -117,13 +156,13 @@ function getTodaySchoolTimes(date) {
 function calculateTimeLeft() {
   const now = new Date();
   if (now >= schoolEndDate) return 0;
-  if (isWeekend(now)) {
-    let daysToMonday = (8 - now.getDay()) % 7;
-    if (daysToMonday === 0) daysToMonday = 1;
-    const nextMonday = new Date(now);
-    nextMonday.setDate(now.getDate() + daysToMonday);
-    nextMonday.setHours(schoolStart.hour, schoolStart.minute, 0, 0);
-    return calculateTimeLeftFromDate(nextMonday);
+  if (isWeekend(now) || isHoliday(now)) {
+    let next = new Date(now);
+    do {
+      next.setDate(next.getDate() + 1);
+    } while (isWeekend(next) || isHoliday(next));
+    next.setHours(schoolStart.hour, schoolStart.minute, 0, 0);
+    return calculateTimeLeftFromDate(next);
   }
   return calculateTimeLeftFromDate(now);
 }
@@ -133,7 +172,7 @@ function calculateTimeLeftFromDate(startDate) {
   const endDate = schoolEndDate;
   let cursor = new Date(startDate);
   while (cursor < endDate) {
-    if (!isWeekend(cursor)) {
+    if (!isWeekend(cursor) && !isHoliday(cursor)) {
       const { start, end } = getTodaySchoolTimes(cursor);
       if (cursor < start) {
         totalMs += end - start;
@@ -147,13 +186,26 @@ function calculateTimeLeftFromDate(startDate) {
   return totalMs;
 }
 
+function calculateSchoolDaysLeft() {
+  let days = 0;
+  const now = new Date();
+  const end = new Date(schoolEndDate);
+  let d = new Date(now);
+  d.setHours(0, 0, 0, 0);
+  while (d <= end) {
+    if (!isWeekend(d) && !isHoliday(d)) days++;
+    d.setDate(d.getDate() + 1);
+  }
+  return days;
+}
+
 function calculateSchoolTimeProgress() {
   const now = new Date();
   let total = 0;
   let passed = 0;
   let d = new Date(schoolStartDate);
   while (d <= schoolEndDate) {
-    if (!isWeekend(d)) {
+    if (!isWeekend(d) && !isHoliday(d)) {
       const dailyMs = (schoolEnd.hour * 60 + schoolEnd.minute - (schoolStart.hour * 60 + schoolStart.minute)) * 60 * 1000;
       total += dailyMs;
       if (d < now) passed += dailyMs;
@@ -163,25 +215,44 @@ function calculateSchoolTimeProgress() {
   return (passed / total) * 100;
 }
 
+function requestNotifications() {
+  if (Notification.permission !== 'granted') {
+    Notification.requestPermission();
+  }
+}
+
+function checkMilestones(msLeft) {
+  for (let [threshold, message] of milestones) {
+    if (msLeft <= threshold && !notified[threshold]) {
+      notified[threshold] = true;
+      if (Notification.permission === 'granted') {
+        new Notification(message);
+      }
+    }
+  }
+}
+
 function updateTimer() {
   const msLeft = calculateTimeLeft();
-  const daysLeft = Math.floor(msLeft / (1000 * 60 * 60 * 24));
-  const hrs = Math.floor((msLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+  const hrs = Math.floor(msLeft / (1000 * 60 * 60));
   const mins = Math.floor((msLeft % (1000 * 60 * 60)) / (1000 * 60));
   const secs = Math.floor((msLeft % (1000 * 60)) / 1000);
   const ms = msLeft % 1000;
 
-  daysEl.textContent = `${daysLeft} school days left`;
-  timerEl.textContent = `${daysLeft}d ${hrs}h ${mins}m ${secs}s ${ms}ms`;
+  const schoolDaysLeft = calculateSchoolDaysLeft();
+  daysEl.textContent = `${schoolDaysLeft} school days left`;
+  timerEl.textContent = `${hrs}h ${mins}m ${secs}s ${ms}ms`;
 
   const percent = calculateSchoolTimeProgress();
   percentEl.textContent = `Progress: ${percent.toFixed(2)}%`;
   progressBar.style.width = `${percent}%`;
+
+  checkMilestones(msLeft);
 }
 
+requestNotifications();
 updateTimer();
 setInterval(updateTimer, 100);
 </script>
 </body>
 </html>
-
