@@ -3,13 +3,13 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>School Timer</title>
+<title>Time Left Until Classes End:</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Space+Mono&display=swap');
 
 :root {
   --bg-color: #0f1117;
-  --text-color: #00ffae;       /* green */
+  --text-color: #00ffae;
   --glow-color: #00ffae;
   --progress-bg: #002211;
   --progress-fill: #00ffae;
@@ -23,155 +23,83 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: flex-start;
+  justify-content: center;
   min-height: 100vh;
-  padding: 10px 15px;
-  transition: background-color 0.3s, color 0.3s;
+  padding: 20px;
   text-align: center;
-  font-size: 14px;
-}
-
-body.light {
-  --bg-color: #ffffff;
-  --text-color: #0077ff;       /* blue */
-  --glow-color: #0077ff;
-  --progress-bg: #ddeeff;
-  --progress-fill: #0077ff;
 }
 
 h1 {
-  font-size: 1.8rem;
-  white-space: nowrap;
-  overflow: hidden;
-  border-right: 0.15em solid var(--text-color);
-  width: 0;
-  animation: typing 2s steps(30, end) forwards, blink 0.7s step-end infinite;
-  margin-bottom: 0.4em;
-  user-select: none;
-  margin-left: auto;
-  margin-right: auto;
+  font-size: 1.6rem;
+  margin-bottom: 20px;
 }
 
-@keyframes typing {
-  to { width: 100%; }
-}
-@keyframes blink {
-  50% { border-color: transparent; }
+#timer-box {
+  background-color: #121820;
+  border: 2px solid var(--progress-fill);
+  border-radius: 12px;
+  padding: 20px;
+  max-width: 90vw;
+  box-shadow: 0 0 8px rgba(0, 255, 174, 0.2);
 }
 
 #timer {
-  font-size: 2.8rem;
-  padding: 12px 18px;
-  border-radius: 12px;
-  margin-top: 12px;
-  color: var(--text-color);
-  text-shadow:
-    0 0 6px var(--glow-color),
-    0 0 14px var(--glow-color);
-  display: inline-block;
-  user-select: none;
-  line-height: 1.2;
-  word-break: break-word;
-  font-weight: 700;
-  max-width: 95vw;
-  box-sizing: border-box;
+  font-size: 2rem;
+  margin: 0;
+  font-weight: bold;
+}
+
+#days {
+  font-size: 1.2rem;
+  margin-bottom: 10px;
+  font-weight: normal;
+  color: #aaffee;
 }
 
 #percent {
-  font-size: 1.1rem;
-  margin-top: 8px;
-  font-weight: bold;
-  color: var(--progress-fill);
-  text-shadow:
-    0 0 2px var(--progress-fill),
-    0 0 5px var(--progress-fill);
-  user-select: none;
+  font-size: 1rem;
+  margin-top: 10px;
 }
 
 #progress-container {
-  width: 90vw;
+  width: 100%;
   max-width: 400px;
-  height: 22px;
+  height: 18px;
   background-color: var(--progress-bg);
-  border-radius: 10px;
-  margin-top: 14px;
+  border-radius: 9px;
+  margin: 15px auto;
   overflow: hidden;
-  box-shadow:
-    inset 0 0 7px #004422,
-    inset 0 0 14px #002211;
 }
 
 #progress-bar {
   height: 100%;
   width: 0%;
-  background: linear-gradient(90deg, var(--progress-fill), #005fcc, #0044aa);
-  animation: progressGlow 4s linear infinite;
-  border-radius: 10px;
-  transition: width 0.1s ease-out;
-  box-shadow:
-    0 0 7px var(--progress-fill),
-    0 0 14px #005fcc,
-    0 0 20px #0044aa;
-}
-
-@keyframes progressGlow {
-  0%, 100% { filter: drop-shadow(0 0 4px var(--progress-fill)); }
-  50% { filter: drop-shadow(0 0 8px #005fcc); }
-}
-
-#toggle-btn {
-  margin-top: 14px;
-  padding: 5px 12px;
-  font-family: 'Space Mono', monospace;
-  font-weight: 700;
-  font-size: 0.85rem;
-  background-color: var(--progress-fill);
-  border: none;
-  border-radius: 7px;
-  color: var(--bg-color);
-  cursor: pointer;
-  user-select: none;
-  box-shadow: 0 0 7px var(--progress-fill);
-  transition: background-color 0.3s, color 0.3s;
-}
-
-#toggle-btn:hover {
-  background-color: #005fcc;
-}
-
-/* Responsive */
-@media (max-width: 600px) {
-  h1 { font-size: 6vw; }
-  #timer { font-size: 12vw; }
-  #percent { font-size: 3.5vw; }
-  #progress-container { height: 18px; max-width: 90vw; }
+  background: var(--progress-fill);
+  transition: width 0.2s ease-out;
+  border-radius: 9px;
 }
 </style>
 </head>
 <body>
-<h1>Time Left in School</h1>
-<div id="timer">--:--:-- --</div>
+<h1>Time Left Until Classes End:</h1>
+<div id="timer-box">
+  <div id="days"></div>
+  <div id="timer">--:--:-- --</div>
+</div>
 <div id="percent"></div>
 <div id="progress-container">
   <div id="progress-bar"></div>
 </div>
-<button id="toggle-btn">Toggle Dark/Light Mode</button>
-
-<audio id="bell" src="https://actions.google.com/sounds/v1/alarms/digital_watch_alarm_long.ogg" preload="auto"></audio>
-
 <script>
 const timerEl = document.getElementById("timer");
 const percentEl = document.getElementById("percent");
 const progressBar = document.getElementById("progress-bar");
-const bellSound = document.getElementById("bell");
-const toggleBtn = document.getElementById("toggle-btn");
+const daysEl = document.getElementById("days");
 
 const schoolStart = { hour: 7, minute: 40 };
 const schoolEnd = { hour: 14, minute: 16 };
 const schoolEndDate = new Date("2025-06-16T14:16:00");
 const schoolStartDate = new Date("2024-09-01T07:40:00");
-
-let bellRung = false;
 
 function isWeekend(date) {
   const day = date.getDay();
@@ -189,7 +117,6 @@ function getTodaySchoolTimes(date) {
 function calculateTimeLeft() {
   const now = new Date();
   if (now >= schoolEndDate) return 0;
-
   if (isWeekend(now)) {
     let daysToMonday = (8 - now.getDay()) % 7;
     if (daysToMonday === 0) daysToMonday = 1;
@@ -198,124 +125,60 @@ function calculateTimeLeft() {
     nextMonday.setHours(schoolStart.hour, schoolStart.minute, 0, 0);
     return calculateTimeLeftFromDate(nextMonday);
   }
-
   return calculateTimeLeftFromDate(now);
 }
 
 function calculateTimeLeftFromDate(startDate) {
   let totalMs = 0;
   const endDate = schoolEndDate;
-
   let cursor = new Date(startDate);
-
   while (cursor < endDate) {
     if (!isWeekend(cursor)) {
-      const { start: schoolDayStart, end: schoolDayEnd } = getTodaySchoolTimes(cursor);
-
-      if (cursor < schoolDayStart) {
-        totalMs += schoolDayEnd - schoolDayStart;
-      } else if (cursor >= schoolDayEnd) {
-      } else {
-        totalMs += schoolDayEnd - cursor;
+      const { start, end } = getTodaySchoolTimes(cursor);
+      if (cursor < start) {
+        totalMs += end - start;
+      } else if (cursor < end) {
+        totalMs += end - cursor;
       }
     }
     cursor.setDate(cursor.getDate() + 1);
     cursor.setHours(schoolStart.hour, schoolStart.minute, 0, 0);
   }
-
   return totalMs;
 }
 
-function getSchoolDayLengthMs() {
-  return (schoolEnd.hour * 60 + schoolEnd.minute - (schoolStart.hour * 60 + schoolStart.minute)) * 60 * 1000;
-}
-
-function calculateTotalSchoolTimeSeptToEnd() {
+function calculateSchoolTimeProgress() {
+  const now = new Date();
   let total = 0;
+  let passed = 0;
   let d = new Date(schoolStartDate);
   while (d <= schoolEndDate) {
     if (!isWeekend(d)) {
-      total += getSchoolDayLengthMs();
+      total += (schoolEnd.hour * 60 + schoolEnd.minute - (schoolStart.hour * 60 + schoolStart.minute)) * 60 * 1000;
+      if (d < now) passed += (schoolEnd.hour * 60 + schoolEnd.minute - (schoolStart.hour * 60 + schoolStart.minute)) * 60 * 1000;
     }
     d.setDate(d.getDate() + 1);
   }
-  return total;
-}
-
-function calculateSchoolTimePassedSinceSept() {
-  const now = new Date();
-  if (now < schoolStartDate) return 0;
-  let total = 0;
-  let d = new Date(schoolStartDate);
-  while (d < now) {
-    if (!isWeekend(d)) {
-      if (d.toDateString() === now.toDateString()) {
-        const startToday = new Date(d.getFullYear(), d.getMonth(), d.getDate(), schoolStart.hour, schoolStart.minute);
-        const endToday = new Date(d.getFullYear(), d.getMonth(), d.getDate(), schoolEnd.hour, schoolEnd.minute);
-        if (now < startToday) {
-          total += 0;
-        } else if (now > endToday) {
-          total += getSchoolDayLengthMs();
-        } else {
-          total += now - startToday;
-        }
-      } else {
-        total += getSchoolDayLengthMs();
-      }
-    }
-    d.setDate(d.getDate() + 1);
-  }
-  return total;
+  return (passed / total) * 100;
 }
 
 function updateTimer() {
-  const timeLeftMs = calculateTimeLeft();
-  if (timeLeftMs <= 0) {
-    if (!bellRung) {
-      bellSound.play().catch(() => {});
-      bellRung = true;
-    }
-    timerEl.textContent = "🎉 School's Out!";
-    percentEl.textContent = "";
-    progressBar.style.width = "100%";
-    return;
-  }
+  const msLeft = calculateTimeLeft();
+  const daysLeft = Math.floor(msLeft / (1000 * 60 * 60 * 24));
+  const hrs = Math.floor((msLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+  const mins = Math.floor((msLeft % (1000 * 60 * 60)) / (1000 * 60));
+  const secs = Math.floor((msLeft % (1000 * 60)) / 1000);
 
-  const hrs = Math.floor(timeLeftMs / 3600000);
-  const mins = Math.floor((timeLeftMs % 3600000) / 60000);
-  const secs = Math.floor((timeLeftMs % 60000) / 1000);
-  const ms = Math.floor((timeLeftMs % 1000) / 10);
+  daysEl.textContent = `${daysLeft} school days left`;
+  timerEl.textContent = `${hrs}h ${mins}m ${secs}s`;
 
-  timerEl.textContent = `${hrs}h ${mins}m ${secs}s ${ms.toString().padStart(2, '0')}ms`;
-
-  const totalSchoolMsSeptToEnd = calculateTotalSchoolTimeSeptToEnd();
-  const passedSchoolMs = calculateSchoolTimePassedSinceSept();
-
-  const progressPercent = (passedSchoolMs / totalSchoolMsSeptToEnd) * 100;
-
-  percentEl.textContent = `📊 Total Time Passed Since Sept 1: ${progressPercent.toFixed(2)}%`;
-  progressBar.style.width = `${progressPercent}%`;
-
-  const now = new Date();
-  if (
-    now.getHours() === schoolEnd.hour &&
-    now.getMinutes() === schoolEnd.minute &&
-    now.getSeconds() === 0 &&
-    !bellRung
-  ) {
-    bellSound.play().catch(() => {});
-    bellRung = true;
-  }
+  const percent = calculateSchoolTimeProgress();
+  percentEl.textContent = `Progress: ${percent.toFixed(2)}%`;
+  progressBar.style.width = `${percent}%`;
 }
 
-toggleBtn.addEventListener("click", () => {
-  document.body.classList.toggle("light");
-});
-
 updateTimer();
-setInterval(updateTimer, 50);
+setInterval(updateTimer, 1000);
 </script>
 </body>
 </html>
-
-
