@@ -1,200 +1,281 @@
-<!-- FULL CODE START -->
-<div id="timer-box">
-  <div id="days"></div>
-  <div id="timer">--h --m --s --ms</div>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Time Left Until Classes End:</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Space+Mono&display=swap');
+
+    :root {
+      --bg-color: #0f1117;
+      --text-color: #00ffae;
+      --glow-color: #00ffae;
+      --progress-bg: #002211;
+      --progress-fill: #00ffae;
+    }
+
+    body {
+      margin: 0;
+      background: #0f1117;
+      color: var(--text-color);
+      font-family: 'Space Mono', monospace;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      overflow-x: hidden;
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 1.5rem;
+      margin: 10px 0;
+    }
+
+    #timer-box {
+      background-color: #121820;
+      border: 2px solid var(--progress-fill);
+      border-radius: 12px;
+      padding: 15px 20px;
+      box-shadow: 0 0 6px rgba(0, 255, 174, 0.15);
+      max-width: 90vw;
+    }
+
+    #timer {
+      font-size: 1.7rem;
+      font-weight: bold;
+      margin: 0;
+    }
+
+    #days {
+      font-size: 1rem;
+      margin-bottom: 8px;
+      font-weight: normal;
+      color: #aaffee;
+    }
+
+    #percent {
+      font-size: 0.9rem;
+      margin-top: 10px;
+    }
+
+    #progress-container {
+      width: 80vw;
+      max-width: 400px;
+      height: 14px;
+      background-color: var(--progress-bg);
+      border-radius: 7px;
+      margin-top: 14px;
+      overflow: hidden;
+    }
+
+    #progress-bar {
+      height: 100%;
+      width: 0%;
+      background: var(--progress-fill);
+      transition: width 0.2s ease-out;
+      border-radius: 7px;
+    }
+
+    button {
+      font-family: 'Space Mono', monospace;
+    }
+  </style>
+</head>
+<body>
+  <h1>Time Left Until Classes End:</h1>
+
+  <div id="timer-box">
+    <div id="days"></div>
+    <div id="timer">--h --m --s --ms</div>
+  </div>
   <div id="percent"></div>
   <div id="progress-container">
     <div id="progress-bar"></div>
   </div>
-</div>
 
-<div id="exam-countdowns" style="margin-top: 30px; max-width: 500px; text-align: center;">
-  <button id="toggle-exams" style="margin-bottom: 10px; padding: 6px 12px; font-size: 1rem; font-family: 'Space Mono', monospace; border-radius: 8px; border: 2px solid var(--progress-fill-dark); background: transparent; color: var(--progress-fill-dark); cursor: pointer;">Show Exam Countdowns</button>
+  <div id="exam-countdowns" style="margin-top: 30px; max-width: 500px; text-align: center;">
+    <button id="toggle-exams" style="margin-bottom: 10px; padding: 6px 12px; font-size: 1rem; border-radius: 8px; border: 2px solid var(--progress-fill); background: transparent; color: var(--progress-fill); cursor: pointer;">Show Exam Countdowns</button>
 
-  <div id="exam-list" style="display: none; transition: all 0.3s ease;">
-    <h2 style="margin-bottom: 10px; font-size: 1.4rem;">📚 Regents & Finals Countdown</h2>
-    <div id="next-exam" style="margin-bottom: 15px; font-size: 1.1rem; font-weight: bold; color: #ffaa55;"></div>
-    <ul style="list-style: none; padding: 0; font-size: 1rem;">
-      <li><strong>English 8:</strong> <span id="english8-countdown"></span></li>
-      <li><strong>Algebra 1:</strong> <span id="algebra1-countdown"></span></li>
-      <li><strong>Earth Science:</strong> <span id="earthscience-countdown"></span></li>
-      <li><strong>FLACS A:</strong> <span id="flacs-countdown"></span></li>
-      <li><strong>Social Studies 8:</strong> <span id="ss8-countdown"></span></li>
-    </ul>
+    <div id="exam-list" style="display: none;">
+      <h2 style="margin-bottom: 10px; font-size: 1.4rem;">📚 Regents & Finals Countdown</h2>
+      <div id="next-exam" style="margin-bottom: 15px; font-size: 1.1rem; font-weight: bold; color: #ffaa55;"></div>
+      <ul style="list-style: none; padding: 0; font-size: 1rem;">
+        <li><strong>English 8:</strong> <span id="english8-countdown"></span></li>
+        <li><strong>Algebra 1:</strong> <span id="algebra1-countdown"></span></li>
+        <li><strong>Earth Science:</strong> <span id="earthscience-countdown"></span></li>
+        <li><strong>FLACS A:</strong> <span id="flacs-countdown"></span></li>
+        <li><strong>Social Studies 8:</strong> <span id="ss8-countdown"></span></li>
+      </ul>
+    </div>
   </div>
-</div>
 
-<script>
-const examDates = {
-  'english8-countdown': new Date('2025-06-17T08:00:00'),
-  'algebra1-countdown': new Date('2025-06-18T12:00:00'),
-  'earthscience-countdown': new Date('2025-06-20T12:00:00'),
-  'flacs-countdown': new Date('2025-06-24T08:00:00'),
-  'ss8-countdown': new Date('2025-06-12T07:45:00')
-};
+  <script>
+    const timerEl = document.getElementById("timer");
+    const percentEl = document.getElementById("percent");
+    const progressBar = document.getElementById("progress-bar");
+    const daysEl = document.getElementById("days");
 
-const timerEl = document.getElementById("timer");
-const percentEl = document.getElementById("percent");
-const progressBar = document.getElementById("progress-bar");
-const daysEl = document.getElementById("days");
-const schoolStart = { hour: 7, minute: 40 };
-const schoolEnd = { hour: 14, minute: 16 };
-const schoolEndDate = new Date("2025-06-16T14:16:00");
-const schoolStartDate = new Date("2024-09-01T07:40:00");
-const holidays = [
-  ["2024-09-02"], ["2024-10-03"], ["2024-10-04"], ["2024-10-14"],
-  ["2024-11-05"], ["2024-11-11"], ["2024-11-28"], ["2024-11-29"],
-  ["2024-12-23","2025-01-03"], ["2025-01-20"], ["2025-01-29"],
-  ["2025-02-17","2025-02-21"], ["2025-04-10","2025-04-17"],
-  ["2025-05-23"], ["2025-05-26"], ["2025-06-19"]
-];
+    const schoolStart = { hour: 7, minute: 40 };
+    const schoolEnd = { hour: 14, minute: 16 };
+    const schoolEndDate = new Date("2025-06-16T14:16:00");
+    const schoolStartDate = new Date("2024-09-01T07:40:00");
 
-function isHoliday(date) {
-  const dayStr = date.toISOString().split("T")[0];
-  return holidays.some(([start, end]) => {
-    if (!end) return start === dayStr;
-    return dayStr >= start && dayStr <= end;
-  });
-}
+    const holidays = [
+      ["2024-09-02"], ["2024-10-03"], ["2024-10-04"], ["2024-10-14"],
+      ["2024-11-05"], ["2024-11-11"], ["2024-11-28"], ["2024-11-29"],
+      ["2024-12-23","2025-01-03"], ["2025-01-20"], ["2025-01-29"],
+      ["2025-02-17","2025-02-21"], ["2025-04-10","2025-04-17"],
+      ["2025-05-23"], ["2025-05-26"], ["2025-06-19"]
+    ];
 
-function isWeekend(date) {
-  const day = date.getDay();
-  return day === 0 || day === 6;
-}
+    const examDates = {
+      'english8-countdown': new Date('2025-06-17T08:00:00'),
+      'algebra1-countdown': new Date('2025-06-18T12:00:00'),
+      'earthscience-countdown': new Date('2025-06-20T12:00:00'),
+      'flacs-countdown': new Date('2025-06-24T08:00:00'),
+      'ss8-countdown': new Date('2025-06-12T07:45:00')
+    };
 
-function getTodaySchoolTimes(date) {
-  const start = new Date(date);
-  start.setHours(schoolStart.hour, schoolStart.minute, 0, 0);
-  const end = new Date(date);
-  end.setHours(schoolEnd.hour, schoolEnd.minute, 0, 0);
-  return { start, end };
-}
+    function isHoliday(date) {
+      const dayStr = date.toISOString().split("T")[0];
+      return holidays.some(([start, end]) => {
+        if (!end) return start === dayStr;
+        return dayStr >= start && dayStr <= end;
+      });
+    }
 
-function getSchoolDayDurationMs() {
-  const startMinutes = schoolStart.hour * 60 + schoolStart.minute;
-  const endMinutes = schoolEnd.hour * 60 + schoolEnd.minute;
-  return (endMinutes - startMinutes) * 60 * 1000;
-}
+    function isWeekend(date) {
+      return date.getDay() === 0 || date.getDay() === 6;
+    }
 
-function calculateTimeLeftFromDate(startDate) {
-  let totalMs = 0;
-  const endDate = schoolEndDate;
-  let cursor = new Date(startDate);
-  const schoolDayDurationMs = getSchoolDayDurationMs();
-  while (cursor < endDate) {
-    if (!isWeekend(cursor) && !isHoliday(cursor)) {
-      const { start, end } = getTodaySchoolTimes(cursor);
-      if (cursor.toDateString() === startDate.toDateString()) {
-        if (cursor < start) totalMs += schoolDayDurationMs;
-        else if (cursor >= start && cursor < end) totalMs += end - cursor;
-      } else {
-        totalMs += schoolDayDurationMs;
+    function getTodaySchoolTimes(date) {
+      const start = new Date(date);
+      start.setHours(schoolStart.hour, schoolStart.minute, 0, 0);
+      const end = new Date(date);
+      end.setHours(schoolEnd.hour, schoolEnd.minute, 0, 0);
+      return { start, end };
+    }
+
+    function getSchoolDayDurationMs() {
+      const startMinutes = schoolStart.hour * 60 + schoolStart.minute;
+      const endMinutes = schoolEnd.hour * 60 + schoolEnd.minute;
+      return (endMinutes - startMinutes) * 60 * 1000;
+    }
+
+    function calculateTimeLeftFromDate(startDate) {
+      let totalMs = 0;
+      const endDate = schoolEndDate;
+      let cursor = new Date(startDate);
+      const schoolDayDurationMs = getSchoolDayDurationMs();
+      while (cursor < endDate) {
+        if (!isWeekend(cursor) && !isHoliday(cursor)) {
+          const { start, end } = getTodaySchoolTimes(cursor);
+          if (cursor.toDateString() === startDate.toDateString()) {
+            if (cursor < start) totalMs += schoolDayDurationMs;
+            else if (cursor >= start && cursor < end) totalMs += end - cursor;
+          } else {
+            totalMs += schoolDayDurationMs;
+          }
+        }
+        cursor.setDate(cursor.getDate() + 1);
+        cursor.setHours(schoolStart.hour, schoolStart.minute, 0, 0);
       }
+      return totalMs;
     }
-    cursor.setDate(cursor.getDate() + 1);
-    cursor.setHours(schoolStart.hour, schoolStart.minute, 0, 0);
-  }
-  return totalMs;
-}
 
-function calculateSchoolDaysLeft() {
-  let days = 0;
-  const now = new Date();
-  const end = new Date(schoolEndDate);
-  let d = new Date(now);
-  d.setHours(0, 0, 0, 0);
-  while (d <= end) {
-    if (!isWeekend(d) && !isHoliday(d)) days++;
-    d.setDate(d.getDate() + 1);
-  }
-  return days;
-}
-
-function calculateSchoolTimeProgress() {
-  const now = new Date();
-  let total = 0, passed = 0;
-  let d = new Date(schoolStartDate);
-  while (d <= schoolEndDate) {
-    if (!isWeekend(d) && !isHoliday(d)) {
-      const dailyMs = getSchoolDayDurationMs();
-      total += dailyMs;
-      if (d < now) passed += dailyMs;
-    }
-    d.setDate(d.getDate() + 1);
-  }
-  return (passed / total) * 100;
-}
-
-function updateMainTimer() {
-  const now = new Date();
-  let msLeft = calculateTimeLeftFromDate(now);
-  const hrs = Math.floor(msLeft / 3600000);
-  const mins = Math.floor((msLeft % 3600000) / 60000);
-  const secs = Math.floor((msLeft % 60000) / 1000);
-  const msec = msLeft % 1000;
-  timerEl.textContent = `${hrs}h ${mins}m ${secs}s ${msec}ms`;
-  daysEl.textContent = `${calculateSchoolDaysLeft()} school days left`;
-  const percent = calculateSchoolTimeProgress();
-  percentEl.textContent = `Progress: ${percent.toFixed(2)}%`;
-  progressBar.style.width = `${percent}%`;
-}
-
-function updateExamCountdowns() {
-  const now = new Date();
-  let upcoming = null;
-  let soonestDiff = Infinity;
-  let soonestId = null;
-  for (const [id, date] of Object.entries(examDates)) {
-    const el = document.getElementById(id);
-    if (!el) continue;
-    const diff = date - now;
-    if (diff <= 0) {
-      el.textContent = 'Started or completed';
-    } else {
-      if (diff < soonestDiff) {
-        soonestDiff = diff;
-        soonestId = id;
-        upcoming = id.replace("-countdown", "")
-          .replace("ss8", "Social Studies 8")
-          .replace("english8", "English 8")
-          .replace("algebra1", "Algebra 1")
-          .replace("earthscience", "Earth Science")
-          .replace("flacs", "FLACS A");
+    function calculateSchoolDaysLeft() {
+      let days = 0;
+      const now = new Date();
+      const end = new Date(schoolEndDate);
+      let d = new Date(now);
+      d.setHours(0, 0, 0, 0);
+      while (d <= end) {
+        if (!isWeekend(d) && !isHoliday(d)) days++;
+        d.setDate(d.getDate() + 1);
       }
+      return days;
     }
-  }
 
-  for (const [id, date] of Object.entries(examDates)) {
-    const el = document.getElementById(id);
-    if (!el) continue;
-    const diff = date - now;
-    if (diff > 0) {
-      const d = Math.floor(diff / (1000 * 60 * 60 * 24));
-      const h = Math.floor((diff / (1000 * 60 * 60)) % 24);
-      const m = Math.floor((diff / (1000 * 60)) % 60);
-      const s = Math.floor((diff / 1000) % 60);
-      const ms = diff % 1000;
-      el.textContent = (id === soonestId)
-        ? `${d}d ${h}h ${m}m ${s}s ${ms}ms`
-        : `${d}d ${h}h ${m}m ${s}s`;
+    function calculateSchoolTimeProgress() {
+      const now = new Date();
+      let total = 0, passed = 0;
+      let d = new Date(schoolStartDate);
+      while (d <= schoolEndDate) {
+        if (!isWeekend(d) && !isHoliday(d)) {
+          const dailyMs = getSchoolDayDurationMs();
+          total += dailyMs;
+          if (d < now) passed += dailyMs;
+        }
+        d.setDate(d.getDate() + 1);
+      }
+      return (passed / total) * 100;
     }
-  }
 
-  const nextExamEl = document.getElementById("next-exam");
-  nextExamEl.textContent = upcoming ? `🕑 Next Exam: ${upcoming}` : '';
-}
+    function updateMainTimer() {
+      const now = new Date();
+      let msLeft = calculateTimeLeftFromDate(now);
+      const hrs = Math.floor(msLeft / 3600000);
+      const mins = Math.floor((msLeft % 3600000) / 60000);
+      const secs = Math.floor((msLeft % 60000) / 1000);
+      const msec = msLeft % 1000;
+      timerEl.textContent = `${hrs}h ${mins}m ${secs}s ${msec}ms`;
+      daysEl.textContent = `${calculateSchoolDaysLeft()} school days left`;
+      const percent = calculateSchoolTimeProgress();
+      percentEl.textContent = `Progress: ${percent.toFixed(2)}%`;
+      progressBar.style.width = `${percent}%`;
+    }
 
-document.getElementById("toggle-exams").addEventListener("click", () => {
-  const list = document.getElementById("exam-list");
-  const isVisible = list.style.display === "block";
-  list.style.display = isVisible ? "none" : "block";
-  document.getElementById("toggle-exams").textContent = isVisible ? "Show Exam Countdowns" : "Hide Exam Countdowns";
-});
+    function updateExamCountdowns() {
+      const now = new Date();
+      let upcoming = null;
+      let soonestDiff = Infinity;
+      let soonestId = null;
 
-function updateEverything() {
-  updateMainTimer();
-  updateExamCountdowns();
-}
+      for (const [id, date] of Object.entries(examDates)) {
+        const diff = date - now;
+        if (diff > 0 && diff < soonestDiff) {
+          soonestDiff = diff;
+          soonestId = id;
+          upcoming = id.replace("-countdown", "").replace("ss8", "Social Studies 8").replace("english8", "English 8").replace("algebra1", "Algebra 1").replace("earthscience", "Earth Science").replace("flacs", "FLACS A");
+        }
+      }
 
-setInterval(updateEverything, 1);
-</script>
+      for (const [id, date] of Object.entries(examDates)) {
+        const el = document.getElementById(id);
+        if (!el) continue;
+        const diff = date - now;
+        if (diff <= 0) {
+          el.textContent = "Started or completed";
+        } else {
+          const d = Math.floor(diff / (1000 * 60 * 60 * 24));
+          const h = Math.floor((diff / (1000 * 60 * 60)) % 24);
+          const m = Math.floor((diff / (1000 * 60)) % 60);
+          const s = Math.floor((diff / 1000) % 60);
+          const ms = diff % 1000;
+          el.textContent = (id === soonestId) ? `${d}d ${h}h ${m}m ${s}s ${ms}ms` : `${d}d ${h}h ${m}m ${s}s`;
+        }
+      }
+
+      const nextExamEl = document.getElementById("next-exam");
+      nextExamEl.textContent = upcoming ? `🕑 Next Exam: ${upcoming}` : "";
+    }
+
+    document.getElementById("toggle-exams").addEventListener("click", () => {
+      const list = document.getElementById("exam-list");
+      const isVisible = list.style.display === "block";
+      list.style.display = isVisible ? "none" : "block";
+      document.getElementById("toggle-exams").textContent = isVisible ? "Show Exam Countdowns" : "Hide Exam Countdowns";
+    });
+
+    function updateEverything() {
+      updateMainTimer();
+      updateExamCountdowns();
+    }
+
+    setInterval(updateEverything, 1);
+  </script>
+</body>
+</html>
