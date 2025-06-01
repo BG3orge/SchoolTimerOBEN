@@ -24,14 +24,14 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: 100vh;
-  padding: 20px;
+  height: 100vh;
+  overflow: hidden;
   text-align: center;
 }
 
 h1 {
   font-size: 1.6rem;
-  margin-bottom: 20px;
+  margin-bottom: 10px;
 }
 
 #timer-box {
@@ -39,8 +39,8 @@ h1 {
   border: 2px solid var(--progress-fill);
   border-radius: 12px;
   padding: 20px;
+  box-shadow: 0 0 6px rgba(0, 255, 174, 0.1);
   max-width: 90vw;
-  box-shadow: 0 0 8px rgba(0, 255, 174, 0.2);
 }
 
 #timer {
@@ -84,7 +84,7 @@ h1 {
 <h1>Time Left Until Classes End:</h1>
 <div id="timer-box">
   <div id="days"></div>
-  <div id="timer">--:--:-- --</div>
+  <div id="timer">--d --h --m --s --ms</div>
 </div>
 <div id="percent"></div>
 <div id="progress-container">
@@ -154,8 +154,9 @@ function calculateSchoolTimeProgress() {
   let d = new Date(schoolStartDate);
   while (d <= schoolEndDate) {
     if (!isWeekend(d)) {
-      total += (schoolEnd.hour * 60 + schoolEnd.minute - (schoolStart.hour * 60 + schoolStart.minute)) * 60 * 1000;
-      if (d < now) passed += (schoolEnd.hour * 60 + schoolEnd.minute - (schoolStart.hour * 60 + schoolStart.minute)) * 60 * 1000;
+      const dailyMs = (schoolEnd.hour * 60 + schoolEnd.minute - (schoolStart.hour * 60 + schoolStart.minute)) * 60 * 1000;
+      total += dailyMs;
+      if (d < now) passed += dailyMs;
     }
     d.setDate(d.getDate() + 1);
   }
@@ -168,9 +169,10 @@ function updateTimer() {
   const hrs = Math.floor((msLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
   const mins = Math.floor((msLeft % (1000 * 60 * 60)) / (1000 * 60));
   const secs = Math.floor((msLeft % (1000 * 60)) / 1000);
+  const ms = msLeft % 1000;
 
   daysEl.textContent = `${daysLeft} school days left`;
-  timerEl.textContent = `${hrs}h ${mins}m ${secs}s`;
+  timerEl.textContent = `${daysLeft}d ${hrs}h ${mins}m ${secs}s ${ms}ms`;
 
   const percent = calculateSchoolTimeProgress();
   percentEl.textContent = `Progress: ${percent.toFixed(2)}%`;
@@ -178,7 +180,8 @@ function updateTimer() {
 }
 
 updateTimer();
-setInterval(updateTimer, 1000);
+setInterval(updateTimer, 100);
 </script>
 </body>
 </html>
+
