@@ -17,7 +17,9 @@
 
 body {
   margin: 0;
-  background: #0f1117;
+  background: linear-gradient(-45deg, #0f1117, #1a1f2b, #0f1117);
+  background-size: 400% 400%;
+  animation: gradientBG 20s ease infinite;
   color: var(--text-color);
   font-family: 'Space Mono', monospace;
   display: flex;
@@ -29,45 +31,53 @@ body {
   text-align: center;
 }
 
+@keyframes gradientBG {
+  0% {background-position: 0% 50%;}
+  50% {background-position: 100% 50%;}
+  100% {background-position: 0% 50%;}
+}
+
 h1 {
-  font-size: 1.5rem;
-  margin: 10px 0;
+  font-size: 1.6rem;
+  margin-bottom: 10px;
 }
 
 #timer-box {
   background-color: #121820;
   border: 2px solid var(--progress-fill);
   border-radius: 12px;
-  padding: 15px 20px;
-  box-shadow: 0 0 6px rgba(0, 255, 174, 0.15);
+  padding: 20px 30px;
+  box-shadow: 0 0 4px rgba(0, 255, 174, 0.2);
   max-width: 90vw;
+  min-width: 280px;
 }
 
 #timer {
-  font-size: 1.7rem;
-  font-weight: bold;
+  font-size: 2rem;
   margin: 0;
+  font-weight: bold;
+  letter-spacing: 0.05em;
 }
 
 #days {
-  font-size: 1rem;
-  margin-bottom: 8px;
+  font-size: 1.2rem;
+  margin-bottom: 10px;
   font-weight: normal;
   color: #aaffee;
 }
 
 #percent {
-  font-size: 0.9rem;
+  font-size: 1rem;
   margin-top: 10px;
 }
 
 #progress-container {
-  width: 80vw;
+  width: 100%;
   max-width: 400px;
-  height: 14px;
+  height: 18px;
   background-color: var(--progress-bg);
-  border-radius: 7px;
-  margin-top: 14px;
+  border-radius: 9px;
+  margin: 15px auto;
   overflow: hidden;
 }
 
@@ -76,7 +86,7 @@ h1 {
   width: 0%;
   background: var(--progress-fill);
   transition: width 0.2s ease-out;
-  border-radius: 7px;
+  border-radius: 9px;
 }
 </style>
 </head>
@@ -96,10 +106,10 @@ const percentEl = document.getElementById("percent");
 const progressBar = document.getElementById("progress-bar");
 const daysEl = document.getElementById("days");
 
-const schoolStart = { hour: 7, minute: 45 };
+const schoolStart = { hour: 7, minute: 40 };
 const schoolEnd = { hour: 14, minute: 16 };
 const schoolEndDate = new Date("2025-06-16T14:16:00");
-const schoolStartDate = new Date("2024-09-01T07:45:00");
+const schoolStartDate = new Date("2024-09-01T07:40:00");
 
 const holidays = [
   ["2024-09-02"], ["2024-10-03"], ["2024-10-04"], ["2024-10-14"],
@@ -108,6 +118,21 @@ const holidays = [
   ["2025-02-17","2025-02-21"], ["2025-04-10","2025-04-17"],
   ["2025-05-23"], ["2025-05-26"], ["2025-06-19"]
 ];
+
+const milestones = [
+  [60 * 24 * 60 * 60 * 1000, "📅 2 months left!"],
+  [30 * 24 * 60 * 60 * 1000, "📅 1 month left!"],
+  [21 * 24 * 60 * 60 * 1000, "📅 3 weeks left!"],
+  [14 * 24 * 60 * 60 * 1000, "📅 2 weeks left!"],
+  [7 * 24 * 60 * 60 * 1000, "📅 1 week left!"],
+  [2 * 24 * 60 * 60 * 1000, "📅 2 days left!"],
+  [1 * 24 * 60 * 60 * 1000, "📅 1 day left!"],
+  [60 * 60 * 1000, "⏰ 1 hour left!"],
+  [10 * 1000, "🔥 10 seconds left!"],
+  [0, "🎉 School's out!"]
+];
+
+let notified = {};
 
 function isHoliday(date) {
   const dayStr = date.toISOString().split("T")[0];
@@ -118,81 +143,133 @@ function isHoliday(date) {
 }
 
 function isWeekend(date) {
-  return date.getDay() === 0 || date.getDay() === 6;
+  const day = date.getDay();
+  return day === 0 || day === 6;
 }
 
-function getSchoolDayDuration() {
+function getTodaySchoolTimes(date) {
+  const start = new Date(date);
+  start.setHours(schoolStart.hour, schoolStart.minute, 0, 0);
+  const end = new Date(date);
+  end.setHours(schoolEnd.hour, schoolEnd.minute, 0, 0);
+  return { start, end };
+}
+
+function getSchoolDayDurationMs() {
   const startMinutes = schoolStart.hour * 60 + schoolStart.minute;
   const endMinutes = schoolEnd.hour * 60 + schoolEnd.minute;
-  return (endMinutes - startMinutes) * 60 * 1000;
+  return (endMinutes - startMinutes) * 60 * 1000; // total school day ms
 }
 
 function calculateTimeLeft() {
   const now = new Date();
   if (now >= schoolEndDate) return 0;
+  if (isWeekend(now) || isHoliday(now)) {
+    let next = new Date(now);
+    do {
+      next.setDate(next.getDate() + 1);
+    } while (isWeekend(next) || isHoliday(next));
+    next.setHours(schoolStart.hour, schoolStart.minute, 0, 0);
+    return calculateTimeLeftFromDate(next);
+  }
+  return calculateTimeLeftFromDate(now);
+}
 
-  let total = 0;
-  let cursor = new Date(now);
+function calculateTimeLeftFromDate(startDate) {
+  let totalMs = 0;
+  const endDate = schoolEndDate;
+  let cursor = new Date(startDate);
 
-  while (cursor < schoolEndDate) {
+  const schoolDayDurationMs = getSchoolDayDurationMs();
+
+  while (cursor < endDate) {
     if (!isWeekend(cursor) && !isHoliday(cursor)) {
-      const start = new Date(cursor);
-      start.setHours(schoolStart.hour, schoolStart.minute, 0, 0);
-      const end = new Date(cursor);
-      end.setHours(schoolEnd.hour, schoolEnd.minute, 0, 0);
-      if (cursor < start) total += end - start;
-      else if (cursor < end) total += end - cursor;
+      const { start, end } = getTodaySchoolTimes(cursor);
+
+      if (cursor < start) {
+        // Before school start: full day counts
+        totalMs += schoolDayDurationMs;
+      } else if (cursor >= start && cursor < end) {
+        // During school hours: count from now until end of school
+        totalMs += end - cursor;
+      }
+      // After school end: no time added for that day
     }
+    // Move to next day at school start time
     cursor.setDate(cursor.getDate() + 1);
     cursor.setHours(schoolStart.hour, schoolStart.minute, 0, 0);
   }
-  return total;
+  return totalMs;
 }
 
 function calculateSchoolDaysLeft() {
   let days = 0;
-  const today = new Date();
-  const d = new Date(today);
-  d.setHours(0,0,0,0);
-  while (d <= schoolEndDate) {
+  const now = new Date();
+  const end = new Date(schoolEndDate);
+  let d = new Date(now);
+  d.setHours(0, 0, 0, 0);
+  while (d <= end) {
     if (!isWeekend(d) && !isHoliday(d)) days++;
     d.setDate(d.getDate() + 1);
   }
   return days;
 }
 
-function calculateProgress() {
-  let total = 0, done = 0;
-  let d = new Date(schoolStartDate);
+function calculateSchoolTimeProgress() {
   const now = new Date();
+  let total = 0;
+  let passed = 0;
+  let d = new Date(schoolStartDate);
   while (d <= schoolEndDate) {
     if (!isWeekend(d) && !isHoliday(d)) {
-      const daily = getSchoolDayDuration();
-      total += daily;
-      if (d < now) done += daily;
+      const dailyMs = getSchoolDayDurationMs();
+      total += dailyMs;
+      if (d < now) passed += dailyMs;
     }
     d.setDate(d.getDate() + 1);
   }
-  return (done / total) * 100;
+  return (passed / total) * 100;
 }
 
-function update() {
-  const ms = calculateTimeLeft();
-  const hrs = Math.floor(ms / 3600000);
-  const mins = Math.floor((ms % 3600000) / 60000);
-  const secs = Math.floor((ms % 60000) / 1000);
-  const msec = ms % 1000;
+function requestNotifications() {
+  if (Notification.permission !== 'granted') {
+    Notification.requestPermission();
+  }
+}
 
-  timerEl.textContent = `${hrs}h ${mins}m ${secs}s ${msec}ms`;
-  daysEl.textContent = `${calculateSchoolDaysLeft()} school days left`;
+function checkMilestones(msLeft) {
+  for (let [threshold, message] of milestones) {
+    if (msLeft <= threshold && !notified[threshold]) {
+      notified[threshold] = true;
+      if (Notification.permission === 'granted') {
+        new Notification(message);
+      }
+    }
+  }
+}
 
-  const percent = calculateProgress();
+function updateTimer() {
+  const msLeft = calculateTimeLeft();
+
+  const hrs = Math.floor(msLeft / (1000 * 60 * 60));
+  const mins = Math.floor((msLeft % (1000 * 60 * 60)) / (1000 * 60));
+  const secs = Math.floor((msLeft % (1000 * 60)) / 1000);
+  const ms = msLeft % 1000;
+
+  const schoolDaysLeft = calculateSchoolDaysLeft();
+  daysEl.textContent = `${schoolDaysLeft} school days left`;
+  timerEl.textContent = `${hrs}h ${mins}m ${secs}s ${ms}ms`;
+
+  const percent = calculateSchoolTimeProgress();
   percentEl.textContent = `Progress: ${percent.toFixed(2)}%`;
   progressBar.style.width = `${percent}%`;
+
+  checkMilestones(msLeft);
 }
 
-setInterval(update, 100);
+requestNotifications();
+updateTimer();
+setInterval(updateTimer, 100);
 </script>
 </body>
 </html>
-
