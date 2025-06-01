@@ -232,13 +232,11 @@
       const now = new Date();
       let upcoming = null;
       let soonestDiff = Infinity;
-      let soonestId = null;
 
       for (const [id, date] of Object.entries(examDates)) {
         const diff = date - now;
         if (diff > 0 && diff < soonestDiff) {
           soonestDiff = diff;
-          soonestId = id;
           upcoming = id.replace("-countdown", "").replace("ss8", "Social Studies 8").replace("english8", "English 8").replace("algebra1", "Algebra 1").replace("earthscience", "Earth Science").replace("flacs", "FLACS A");
         }
       }
@@ -254,8 +252,7 @@
           const h = Math.floor((diff / (1000 * 60 * 60)) % 24);
           const m = Math.floor((diff / (1000 * 60)) % 60);
           const s = Math.floor((diff / 1000) % 60);
-          const ms = diff % 1000;
-          el.textContent = (id === soonestId) ? `${d}d ${h}h ${m}m ${s}s ${ms}ms` : `${d}d ${h}h ${m}m ${s}s`;
+          el.textContent = `${d}d ${h}h ${m}m ${s}s`;
         }
       }
 
