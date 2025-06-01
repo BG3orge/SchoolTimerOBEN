@@ -46,17 +46,15 @@ h1 {
   background-color: #121820;
   border: 2px solid var(--progress-fill);
   border-radius: 12px;
-  padding: 20px 30px;
+  padding: 20px;
   box-shadow: 0 0 4px rgba(0, 255, 174, 0.2);
   max-width: 90vw;
-  min-width: 280px;
 }
 
 #timer {
   font-size: 2rem;
   margin: 0;
   font-weight: bold;
-  letter-spacing: 0.05em;
 }
 
 #days {
@@ -155,12 +153,6 @@ function getTodaySchoolTimes(date) {
   return { start, end };
 }
 
-function getSchoolDayDurationMs() {
-  const startMinutes = schoolStart.hour * 60 + schoolStart.minute;
-  const endMinutes = schoolEnd.hour * 60 + schoolEnd.minute;
-  return (endMinutes - startMinutes) * 60 * 1000; // total school day ms
-}
-
 function calculateTimeLeft() {
   const now = new Date();
   if (now >= schoolEndDate) return 0;
@@ -179,23 +171,15 @@ function calculateTimeLeftFromDate(startDate) {
   let totalMs = 0;
   const endDate = schoolEndDate;
   let cursor = new Date(startDate);
-
-  const schoolDayDurationMs = getSchoolDayDurationMs();
-
   while (cursor < endDate) {
     if (!isWeekend(cursor) && !isHoliday(cursor)) {
       const { start, end } = getTodaySchoolTimes(cursor);
-
       if (cursor < start) {
-        // Before school start: full day counts
-        totalMs += schoolDayDurationMs;
-      } else if (cursor >= start && cursor < end) {
-        // During school hours: count from now until end of school
+        totalMs += end - start;
+      } else if (cursor < end) {
         totalMs += end - cursor;
       }
-      // After school end: no time added for that day
     }
-    // Move to next day at school start time
     cursor.setDate(cursor.getDate() + 1);
     cursor.setHours(schoolStart.hour, schoolStart.minute, 0, 0);
   }
@@ -222,7 +206,7 @@ function calculateSchoolTimeProgress() {
   let d = new Date(schoolStartDate);
   while (d <= schoolEndDate) {
     if (!isWeekend(d) && !isHoliday(d)) {
-      const dailyMs = getSchoolDayDurationMs();
+      const dailyMs = (schoolEnd.hour * 60 + schoolEnd.minute - (schoolStart.hour * 60 + schoolStart.minute)) * 60 * 1000;
       total += dailyMs;
       if (d < now) passed += dailyMs;
     }
@@ -250,7 +234,6 @@ function checkMilestones(msLeft) {
 
 function updateTimer() {
   const msLeft = calculateTimeLeft();
-
   const hrs = Math.floor(msLeft / (1000 * 60 * 60));
   const mins = Math.floor((msLeft % (1000 * 60 * 60)) / (1000 * 60));
   const secs = Math.floor((msLeft % (1000 * 60)) / 1000);
@@ -273,3 +256,4 @@ setInterval(updateTimer, 100);
 </script>
 </body>
 </html>
+
